@@ -43,9 +43,32 @@ app.get('/info', (req, res) => {
     
         res.status(204).end();
     });
+    app.use(express.json()); // Middleware to parse JSON requests
+
+    app.post('/api/persons', (req, res) => {
+        const { name, number } = req.body;
     
+        // Check if name or number is missing
+        if (!name || !number) {
+            return res.status(400).json({ error: 'Name or number is missing' });
+        }
     
+        
+        const nameExists = persons.some(p => p.name === name);
+        if (nameExists) {
+            return res.status(400).json({ error: 'Name must be unique' });
+        }
     
+        const newPerson = {
+            id: Math.floor(Math.random() * 1000000).toString(), // Convert to string
+            name,
+            number
+        };
+    
+        persons.push(newPerson); 
+    
+        res.status(201).json(newPerson); 
+      });
 
 
 

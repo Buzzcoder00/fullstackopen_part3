@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-const persons = [
+let persons = [
     { id: "1", name: "Arto Hellas", number: "040-123456" },
     { id: "2", name: "Ada Lovelace", number: "39-44-5323523" },
     { id: "3", name: "Dan Abramov", number: "12-43-234345" },
@@ -19,9 +19,11 @@ app.get('/info', (req, res) => {
         <p>Phonebook has info for ${numEntries} people</p>
         <p>${currentTime}</p>
     `);
+});
+
     app.get('/api/persons/:id', (req, res) => {
         const id = req.params.id;  
-        const person = persons.filter(p => p.id === id); 
+        const person = persons.find(p => p.id === id); 
     
         if (!person) {
             return res.status(404).json({ error: 'Person not found' });
@@ -29,9 +31,22 @@ app.get('/info', (req, res) => {
     
         res.json(person);
     });
+    app.delete('/api/persons/:id', (req, res) => {
+        const id = req.params.id;
+        const personExists = persons.some(p => p.id === id);
+    
+        if (!personExists) {
+            return res.status(404).json({ error: 'Person not found' });
+        }
+    
+        persons = persons.filter(p => p.id !== id); 
+    
+        res.status(204).end();
+    });
     
     
-});
+    
+
 
 
 const PORT = 3001;

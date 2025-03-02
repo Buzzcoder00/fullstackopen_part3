@@ -11,6 +11,16 @@ const persons = [
 app.get('/api/persons', (req, res) => {
     res.json(persons);
 });
+app.get('/info', (req, res) => {
+    const numEntries = persons.length;
+    const currentTime = new Date().toString();
+
+    res.send(`
+        <p>Phonebook has info for ${numEntries} people</p>
+        <p>${currentTime}</p>
+    `);
+});
+
 
 const PORT = 3001;
 app.listen(PORT, () => {

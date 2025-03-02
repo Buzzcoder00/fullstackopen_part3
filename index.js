@@ -19,6 +19,18 @@ app.get('/info', (req, res) => {
         <p>Phonebook has info for ${numEntries} people</p>
         <p>${currentTime}</p>
     `);
+    app.get('/api/persons/:id', (req, res) => {
+        const id = req.params.id;  
+        const person = persons.filter(p => p.id === id); 
+    
+        if (!person) {
+            return res.status(404).json({ error: 'Person not found' });
+        }
+    
+        res.json(person);
+    });
+    
+    
 });
 
 

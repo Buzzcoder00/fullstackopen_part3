@@ -1,9 +1,108 @@
-import axios from 'axios';
+import { useState, useEffect } from 'react';
+import personService from './services/persons';
 
-const baseUrl = 'http://localhost:3001/api/persons';
+const Filter = ({ searchTerm, handleSearchChange }) => (
+  <div>
+    search: <input value={searchTerm} onChange={handleSearchChange} />
+  </div>
+);
 
-const getAll = () => axios.get(baseUrl).then(response => response.data);
-const create = newPerson => axios.post(baseUrl, newPerson).then(response => response.data);
-const remove = id => axios.delete(`${baseUrl}/${id}`);
+const PersonForm = ({ newName, newNumber, handleNameChange, handleNumberChange, handleAddPerson }) => (
+  <form onSubmit={handleAddPerson}>
+    <div>
+      name: <input value={newName} onChange={handleNameChange} />
+    </div>
+    <div>
+      number: <input value={newNumber} onChange={handleNumberChange} />
+    </div>
+    <div>
+      <button type="submit">add</button>
+    </div>
+  </form>
+);
 
-export default { getAll, create, remove };
+const Person = ({ person, handleDelete }) => (
+  <li>
+    {person.name} {person.number} 
+    <button onClick={() => handleDelete(person.id, person.name)}>delete</button>
+  </li>
+);
+
+const Persons = ({ filteredPersons, handleDelete }) => (
+  <ul>
+    {filteredPersons.map(person => (
+      <Person key={person.id} person={person} handleDelete={handleDelete} />
+    ))}
+  </ul>
+);
+
+const App = () => {
+  const [persons, setPersons] = useState([]);
+  const [newName, setNewName] = useState('');
+  const [newNumber, setNewNumber] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    personService.getAll()
+      .then(initialPersons => setPersons(initialPersons))
+      .catch(error => console.error("Error fetching data:", error));
+  }, []);
+
+  const handleNameChange = (event) => setNewName(event.target.value);
+  const handleNumberChange = (event) => setNewNumber(event.target.value);
+  const handleSearchChange = (event) => setSearchTerm(event.target.value);
+
+  const handleAddPerson = (event) => {
+    event.preventDefault();
+
+    if (persons.some(person => person.name === newName)) {
+      alert(`${newName} is already added to the phonebook`);
+      setNewName('');
+      setNewNumber('');
+      return;
+    }
+
+    const newPerson = { name: newName, number: newNumber };
+
+    personService.create(newPerson)
+      .then(returnedPerson => {
+        setPersons([...persons, returnedPerson]);
+        setNewName('');
+        setNewNumber('');
+      })
+      .catch(error => console.error("Error adding person:", error));
+  };
+
+  const handleDeletePerson = (id, name) => {
+    if (window.confirm(`Delete ${name}?`)) {
+      personService.remove(id)
+        .then(() => {
+          setPersons(persons.filter(person => person.id !== id));
+        })
+        .catch(error => console.error("Error deleting person:", error));
+    }
+  };
+
+  const filteredPersons = persons.filter(person => 
+    person.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div>
+      <h2>Phonebook</h2>
+      <Filter searchTerm={searchTerm} handleSearchChange={handleSearchChange} />
+      <h3>Add a new</h3>
+      <PersonForm 
+        newName={newName} 
+        newNumber={newNumber} 
+        handleNameChange={handleNameChange} 
+        handleNumberChange={handleNumberChange} 
+        handleAddPerson={handleAddPerson} 
+      />
+      <h3>Numbers</h3>
+      <Persons filteredPersons={filteredPersons} handleDelete={handleDeletePerson} />
+    </div>
+  );
+};
+
+export default App;
